@@ -22,7 +22,7 @@ public class TokenService
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role)
+            new Claim(ClaimTypes.Role, user.Role) // this is importan to identify users
         };
 
         // 2. Secret key, convert to format that require the library | practicamente es preparar el hash
