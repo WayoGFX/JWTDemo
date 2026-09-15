@@ -31,8 +31,41 @@ public class AuthController : ControllerBase
             return Unauthorized("Username or Password wrong"); // es como enviar un 401, le dice al clienteque hay dato invalido
         }
 
-        // if all correct generate token
-        var token = _tokenService.GenerateToken(user);
-        return Ok(new {token});
+        var accessToken = _tokenService.GenerateToken(user);
+        var refreshToken = _tokenService.GenerateRefreshToken();
+
+        // save the refresh token in db 
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+
+        return Ok(new {accessToken, refreshToken});
+    }
+
+    // for refresh token
+    public record RefreshRequest(string Username, string RefreshToken);
+
+    [HttpPost("refresh")]
+    public IActionResult Refresh(RefreshRequest request)
+    {
+        var user = FakeUserStore.Users.FirstOrDefault(u => u.Username == request.Username);
+
+        if (user is null || user.RefreshToken != request.RefreshToken)
+        {
+            return Unauthorized("Refresh invalid token");
+        }
+        if (user.RefreshTokenExpiry < DateTime.UtcNow)
+        {
+            return Unauthorized("Rfresh expired token, login again");
+        }
+
+        // if all god generate new acces token
+        var newAccessToken = _tokenService.GenerateToken(user);
+
+        // for security, also rotate the refresh token
+        var newRefreshToken = _tokenService.GenerateRefreshToken();
+        user.RefreshToken = newRefreshToken;
+        user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+
+        return Ok(new{accessToken = newAccessToken, refreshToken = newRefreshToken});
     }
 }

@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using JwtDemo.Models;
 namespace JwtDemo.Services;
+using System.Security.Cryptography;
 
 public class TokenService
 {
@@ -43,4 +44,11 @@ public class TokenService
         // 5. Convert to string (this send to client)
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+    public String GenerateRefreshToken()
+    {
+        var randomBytes = new byte[64];
+        RandomNumberGenerator.Fill(randomBytes);
+        return Convert.ToBase64String(randomBytes);
+    }
 }
+
