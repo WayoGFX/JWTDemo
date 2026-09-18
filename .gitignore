@@ -1,0 +1,20 @@
+# sensibility archives
+.env
+.env.local
+*.pem
+*.key
+appsettings.Development.json
+
+
+
+# about C# and .NET
+[Bb]in/
+[Ob]bj/
+[LLo]og/
+[Ll]ogs/
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
