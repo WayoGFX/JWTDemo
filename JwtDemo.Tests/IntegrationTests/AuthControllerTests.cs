@@ -105,6 +105,25 @@ public class AuthControllerTests
     }
 
     [Fact]
+    public async Task Login_ConUsuarioInexistente_DebeRechazar()
+    {
+        // Arrange
+        var db = CrearDbContextEnMemoria();
+        var hasher = new PasswordHasher<User>();
+        var tokenService = CrearTokenService();
+        var controller = new AuthController(db,hasher,tokenService);
+        var request = new AuthController.LoginRequest("wayo","234");
+
+        await controller.Register(request);
+
+        // Act
+        var result = await controller.Login(new AuthController.LoginRequest("oway","6767"));
+        
+        // Assert
+        Assert.IsType<UnauthorizedObjectResult>(result);
+    }
+
+    [Fact]
     public async Task Login_ConPasswordIncorrecta_DeberiaRechazar()
     {
         // Arrange
@@ -121,6 +140,54 @@ public class AuthControllerTests
 
         // Assert
         Assert.IsType<UnauthorizedObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task LogoutUser_ConTokenInexistente_DebeRechazar()
+    {
+       // Arrange
+        var db = CrearDbContextEnMemoria();
+        var hasher = new PasswordHasher<User>();
+        var tokenService = CrearTokenService();
+        var controller = new AuthController(db,hasher, tokenService);
+
+        // Act
+        var result = await controller.Logout(new AuthController.RefreshRequest("tokeninexistente2026"));
+
+        // Assert
+        Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
+    public async Task LogoutUser_ConTokenExpirado_DebeRechazar()
+    {
+       // Arrange
+        var db = CrearDbContextEnMemoria();
+        var hasher = new PasswordHasher<User>();
+        var tokenService = CrearTokenService();
+        var controller = new AuthController(db,hasher, tokenService);
+        var user = new User {Username = "wayo", PasswordHash = "12367"};
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+        
+        var refreshToken = new RefreshToken
+        {
+            Token = "token-vencido-456",
+            Expires = DateTime.UtcNow.AddDays(-1),
+            Revoked = false,
+            UserId = user.Id
+        };
+        db.RefreshTokens.Add(refreshToken);
+        await db.SaveChangesAsync();
+
+        // Act
+        var result = await controller.Logout(new AuthController.RefreshRequest("token-vencido-456"));
+
+        // Assert
+        Assert.IsType<OkObjectResult>(result);
+
+        var tokenEnBd = await db.RefreshTokens.FirstAsync(rt => rt.Token == "token-vencido-456");
+        Assert.True(tokenEnBd.Revoked);
     }
 
     // REFRESH
@@ -165,7 +232,7 @@ public class AuthControllerTests
         db.RefreshTokens.Add(refreshToken);
         await db.SaveChangesAsync();
 
-        var request = new AuthController.RefreshRequest("token-revvocado-123");
+        var request = new AuthController.RefreshRequest("token-revocado-123");
 
         // Act
         var result = await controller.Refresh(request);
@@ -197,7 +264,7 @@ public class AuthControllerTests
         };
         db.RefreshTokens.Add(refreshToken);
         await db.SaveChangesAsync();
-        var request = new AuthController.RefreshRequest("token-vencido456");
+        var request = new AuthController.RefreshRequest("token-vencido-456");
 
         // Act
         var result = await controller.Refresh(request);
