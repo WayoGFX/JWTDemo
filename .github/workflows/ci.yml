@@ -11,21 +11,21 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-#que hace
-steps:
-  - name: Download code from repository
-    uses: actions/checkout@v4
+    #que hace
+    steps:
+      - name: Download code from repository
+        uses: actions/checkout@v4
 
-  - name: Configuration .NET SDK
-    uses: actions/setup-dotnet@v4
-    with:
-      dotnet-version: '9.0.x'
-  
-  - name: Restore dependency
-    run: dotnet restore
+      - name: Configuration .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
 
-  - name: Compile the project
-    run: dotnet build --no-restore --configuration Release
-  
-  - name: Execute tests
-    run: dotnet test --no-build --configuration Release --verbosity normal
+      - name: Restore dependency
+        run: dotnet restore
+
+      - name: Compile the project
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Execute tests
+        run: dotnet test --no-build --configuration Release --verbosity normal
